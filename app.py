@@ -231,13 +231,7 @@ def auth():
 def update_user(user_id):
     if request.method == 'DELETE':
         if ownership(request, user_id):
-            print(user_id)
             userToDelete = User.query.filter_by(id=user_id).first()
-            print(userToDelete.as_dict())
-            # requestToken = request.headers.get('Authorization')
-            # tokenObj = Token.query.filter_by(code=requestToken).first()
-
-            # db.session.delete(tokenObj)
             db.session.delete(userToDelete)
             db.session.commit()
             return {'message': 'OK'}, 204
@@ -319,10 +313,10 @@ def list_users():
 def upload_file(user_id):
     if request.method == 'POST':
         if not request.form:
-            return {'message': 'Bad Request', 'code': 10001, 'data': ['no form sent']}, 400
+            return {'message': 'Bad Request', 'code': 10001, 'data': ['no name sent']}, 400
         name = request.form.get('name')
-        if 'file' not in request.files or name is None or not isinstance(name, str):
-            return {'message': 'Bad Request', 'code': 10001, 'data': ['either no file sent, name not given or name not an instance of string']}, 400
+        if 'file' not in request.files:
+            return {'message': 'Bad Request', 'code': 10001, 'data': ['no file sent']}, 400
         file = request.files['file']
         if file.filename == '':
             return {'message': 'Bad Request', 'code': 10001, 'data': ['no selected file']}, 400
@@ -358,72 +352,53 @@ def list_files_by_user(user_id):
             return {'message': 'Not Found'}, 404
 
 
-# @app.route('/videos', methods=['GET'])
-# def list_videos():
-#     if request.method == 'GET':
-#         name = user = duration = None
-#         if request.json:
-#             name = request.json.get('name')
-#             user = request.json.get('user')
-#             duration = request.json.get('duration')
-#         page = request.args.get('page')
-#         perPage = request.args.get('perPage')
-#         try:
-#             if page:
-#                 page = int(request.args.get('page'))
-#             page = 1 if page is None else page
-#             if perPage:
-#                 perPage = int(request.args.get('perPage'))
-#             perPage = 5 if perPage is None else perPage
-#         except ValueError:
-#             return create_error('Bad Request', 400, ['either page, perPage or both of them are not integers']), 400
-
-#         if name is not None:
-#             videos = Video.query.filter_by(name=name).order_by(text('id desc')).all()
-#         elif user is not None and isinstance(user, int):
-#             videos = Video.query.filter_by(user_id=user).order_by(text('id desc')).all()
-#         elif user is not None and isinstance(user, str):
-#             videos = Video.query.join(User).filter(User.username == user).all()
-#         elif duration is not None:
-#             videos = Video.query.filter_by(duration=duration).order_by(text('id desc')).all()
-#         else:
-#             videos = Video.query.order_by(text('id desc')).all()
-#         page, total, startIndex, endIndex = generate_pager_variables(videos, page, perPage)
-#         printableVideos = []
-#         for video in videos:
-#             printableVideos.append(video.as_dict())
-#         if printableVideos:
-#             return { 'message': 'OK', 'data': printableVideos[startIndex:endIndex], 'pager': { 'current': page, 'total': total } }
-#         else:
-#             return create_error('Not Found', 404, ['no resource matched your request']), 404
-
-@app.route('/video/<int:video_id>', methods=['PUT', 'DELETE'])
+@app.route('/file/<int:file_id>', methods=['PUT', 'DELETE'])
 @auth_required
-def update_video(video_id):    
+def update_file(file_id):
     if request.method == 'PUT':
-        fileToUpdate = Video.query.filter_by(id=video_id).first()
+        fileToUpdate = File.query.filter_by(id=file_id).first()
         if fileToUpdate:
             if ownership(request, fileToUpdate.user_id):
-                if not request.json:
-                    return {'message': 'Bad Request', 'code': 10001, 'data': ['no json sent']}, 400
-                name = request.json.get('name')
+                name = None
+                file = None
+                # if not request.form:
+                #     return {'message': 'Bad Request', 'code': 10001, 'data': ['no form sent']}, 400
+                if request.form:
+                    name = request.form.get('name')
+                if request.files:
+                    file = request.files['file']
+                if not name and not file:
+                    return {'message': 'Bad Request', 'code': 10001, 'data': ['no data sent']}, 400
+                if file and file.filename != '':
+                    filename = secure_filename(file.filename)
+                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'],fileToUpdate.path))
+                    i = 0
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], str(i) + '_' + filename)
+                    while (os.path.isfile(filepath)):
+                        i += 1
+                        filepath = os.path.join(app.config['UPLOAD_FOLDER'], str(i) + '_' + filename)
+                    try:
+                        file.save(filepath)
+                    except:
+                        return {'message': 'Internal Server Error', 'data': ['could not save file to the server']}, 500
+                    fileToUpdate.path = str(i) + '_' + filename
                 if name:
-                    fileToUpdate.name = name
+                    fileToUpdate.name = secure_filename(name)
                 db.session.commit()
-                return { 'message' : 'OK', 'data': fileToUpdate.as_dict() }, 200
+                return {'message': 'OK', 'data': fileToUpdate.as_dict()}, 200
             else:
                 return {'message': 'Forbidden'}, 403
         else:
             return {'message': 'Bad Request', 'code': 10001, 'data': ['resource does not exist']}, 400
 
     if request.method == 'DELETE':
-        videoToDelete = Video.query.filter_by(id=video_id).first()
-        if videoToDelete is not None:
-            if ownership(request, videoToDelete.user_id):
-                os.remove(os.path.join(app.config['UPLOAD_FOLDER'],videoToDelete.source))
-                db.session.delete(videoToDelete)
+        fileToDelete = File.query.filter_by(id=file_id).first()
+        if fileToDelete:
+            if ownership(request, fileToDelete.user_id):
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'],fileToDelete.path))
+                db.session.delete(fileToDelete)
                 db.session.commit()
-                return 204
+                return {'message': 'OK'}, 204
             else:
                 return {'message': 'Forbidden'}, 403
         else:

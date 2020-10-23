@@ -4,14 +4,22 @@ services:
 
   # Database-related
 
+  adminer:
+    image: adminer:4.7.6
+    restart: always
+    ports:
+      - 9981:8080
+
   database:
     image: mysql:latest
     restart: always
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_USER: "myuser"
       MYSQL_PASSWORD: "mypassword"
-      MYSQL_DB: "filesaving"
+      MYSQL_DATABASE: "filesaving"
 
   # Service-related
 
@@ -21,12 +29,11 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./api:/app
+      - ./api:/code
     environment:
-      # FLASK_APP: "app.py"
-      # FLASK_ENV: "development"
       MYSQL_USER: "myuser"
       MYSQL_PASSWORD: "mypassword"
-      MYSQL_DB: "filesaving"
+      MYSQL_DATABASE: "filesaving"
+      MYSQL_HOST: "database"
     depends_on:
       - database

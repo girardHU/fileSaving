@@ -33,9 +33,15 @@ def get_length(filename):
 wordRe = re.compile('[a-zA-Z0-9_-]{3,12}')
 emailRe = re.compile('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$')
 
+## ENV
+mysql_user = os.environ.get('MYSQL_USER')
+mysql_password = os.environ.get('MYSQL_PASSWORD')
+mysql_host = os.environ.get('MYSQL_HOST')
+mysql_database = os.environ.get('MYSQL_DATABASE')
+
 ## APP
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://{}@localhost:3306/{}'.format(os.environ.get('MYSQL_USER'), os.environ.get('MYSQL_DB'))
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:3306/{mysql_database}'
 db = SQLAlchemy(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 

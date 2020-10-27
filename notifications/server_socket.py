@@ -6,21 +6,26 @@ import socket
 import selectors
 import types
 
+messages = {
+    b"File_update": "Notify_File_update",
+    b"File_delete": "Notify_File_delete",
+    b"File_create": "Notify_File_create"
+}
+
 
 class ServerSocket:
     def __init__(self, host, port):
         self._lsock = None
         self._sel = selectors.DefaultSelector()
-        # self._addr = None
+        self._counter = 0
         self.start_server(host, port)
 
     def accept_wrapper(self, sock):
         conn, addr = sock.accept()  # Should be ready to read
         print("accepted connection from", addr)
         conn.setblocking(False)
-        data = types.SimpleNamespace(addr=addr, inb=b"", outb=b"")
-        events = selectors.EVENT_READ | selectors.EVENT_WRITE
-        self._sel.register(conn, events, data=data)
+        data = types.SimpleNamespace(addr=addr, inb=b"")
+        self._sel.register(conn, selectors.EVENT_READ, data=data)
 
     def service_connection(self, key, mask):
         # print("key:", key)
@@ -28,17 +33,16 @@ class ServerSocket:
         sock = key.fileobj
         data = key.data
         if mask & selectors.EVENT_READ:
+            self._counter += 1
             recv_data = sock.recv(1024)  # Should be ready to read
-            print("recv_data:", recv_data)
-            time.sleep(1)
-            if recv_data is b'User_connect':
-                self.handle_user(sock)
-            elif recv_data is b'Admin_connect':
-                self.handle_admin(sock)
-            elif recv_data
-            is b'File_update'
-            or b'File_delete'
-            or b'File_create':
+            # print(f"{self._counter} iteration")
+            print("recv_data:", recv_data, "from", data.addr)
+            # time.sleep(1)
+            if recv_data == b"User_connect":
+                self.handle_user(key)
+            elif recv_data == b"Admin_connect":
+                self.handle_user(key)
+            elif recv_data in messages.keys():
                 self.handle_api_ping(recv_data)
             else:
                 print("closing connection to", data.addr)
@@ -50,14 +54,21 @@ class ServerSocket:
         #         sent = sock.send(data.outb)  # Should be ready to write
         #         data.outb = data.outb[sent:]
 
-    def handle_user(self, sock):
+    def handle_user(self, key):
         print("handle_user")
+        sock = key.fileobj
+        self._sel.unregister(sock)
+        data = types.SimpleNamespace(addr=key.data.addr, outb=b"")
+        self._sel.register(sock, selectors.EVENT_WRITE, data=data)
 
-    def handle_admin(self, sock):
-        print("handle_admin")
-
-    def handle_api_ping(self, ping):
-        print("handle_api_ping, ping:", ping)
+    def handle_api_ping(self, message):
+        print("handle_api_ping, ping:", message, "\n")
+        events = self._sel.select(timeout=None)
+        for key, mask in events:
+            sock = key.fileobj
+            if mask & selectors.EVENT_WRITE:
+                print("sending", messages.get(message), "to", key.data.addr, "\n")
+                sent = sock.send(messages.get(message).encode())
 
     def start_server(self, host, port):
         self._lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

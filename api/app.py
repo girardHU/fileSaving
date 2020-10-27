@@ -1,5 +1,6 @@
 import json
 import re
+import os
 from datetime import datetime, timedelta
 import hashlib, binascii
 from secrets import token_hex
@@ -32,9 +33,15 @@ def get_length(filename):
 wordRe = re.compile('[a-zA-Z0-9_-]{3,12}')
 emailRe = re.compile('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$')
 
+## ENV
+mysql_user = os.environ.get('MYSQL_USER')
+mysql_password = os.environ.get('MYSQL_PASSWORD')
+mysql_host = os.environ.get('MYSQL_HOST')
+mysql_database = os.environ.get('MYSQL_DATABASE')
+
 ## APP
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://user@localhost:3306/filesaving'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:3306/{mysql_database}'
 db = SQLAlchemy(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -224,6 +231,11 @@ def auth():
             else:
                 error = 'user referenced with this username and password does not exist'
         return {'message': 'Bad Request', 'code': 10001, 'data': [error]}, 400
+
+
+@app.route('/')
+def hello_world():
+    return {'message': 'Success'}
 
 
 @app.route('/user/<int:user_id>', methods=['DELETE', 'PUT', 'GET'])

@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+
+  # Database-related
+
+  adminer:
+    image: adminer:4.7.6
+    restart: always
+    ports:
+      - 9981:8080
+
+  database:
+    image: mysql:latest
+    restart: always
+    volumes:
+      - ./database:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_USER: "myuser"
+      MYSQL_PASSWORD: "mypassword"
+      MYSQL_DATABASE: "filesaving"
+
+  # Service-related
+
+  api:
+    build: ./api
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./api:/code
+    environment:
+      MYSQL_USER: "myuser"
+      MYSQL_PASSWORD: "mypassword"
+      MYSQL_DATABASE: "filesaving"
+      MYSQL_HOST: "database"
+    depends_on:
+      - database

@@ -17,15 +17,14 @@ def compute_dir_index(path):
             subdirs.append(os.path.relpath(os.path.join(root, subdir), path))
         for f in filenames:
             files.append(os.path.relpath(os.path.join(root, f), path))
-        
+
     for f in files:
         index[f] = os.path.getmtime(os.path.join(path, f))
-    
+
     content = dict(files=files, subdirs=subdirs, index=index)
     return content
-    
 
-    
+
 def compute_diff(dir_base, dir_cmp):
     data = {}
     data['deleted'] = list(set(dir_cmp['files']) - set(dir_base['files']))
@@ -36,11 +35,10 @@ def compute_diff(dir_base, dir_cmp):
         if dir_base['index'][f] != dir_cmp['index'][f]:
             data['updated'].append(f)
 
-
     return data
 
 
-while(True):
+while True:
     content_main = compute_dir_index(path)
     content_backup = compute_dir_index(path_backup)
     subdirs = content_main["subdirs"]

@@ -3,8 +3,6 @@ import functions as utils
 import time
 
 
-path = './public'
-path_backup = './backup'
 
 
 def compute_dir_index(path):
@@ -17,14 +15,15 @@ def compute_dir_index(path):
             subdirs.append(os.path.relpath(os.path.join(root, subdir), path))
         for f in filenames:
             files.append(os.path.relpath(os.path.join(root, f), path))
-
+        
     for f in files:
         index[f] = os.path.getmtime(os.path.join(path, f))
-
+    
     content = dict(files=files, subdirs=subdirs, index=index)
     return content
+    
 
-
+    
 def compute_diff(dir_base, dir_cmp):
     data = {}
     data['deleted'] = list(set(dir_cmp['files']) - set(dir_base['files']))
@@ -37,8 +36,10 @@ def compute_diff(dir_base, dir_cmp):
 
     return data
 
-
-while True:
+def run_check():
+    path = './public'
+    path_backup = './backup'
+    
     content_main = compute_dir_index(path)
     content_backup = compute_dir_index(path_backup)
     subdirs = content_main["subdirs"]

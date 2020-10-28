@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import time
-from custom_sockets_api import ClientSocket
-import backup_script as b_script
+import os
+from modules.custom_sockets_api import ClientSocket
+import check as b_script
 
-
-userClient = ClientSocket("0.0.0.0", 9983)
+notification_host = os.environ.get("NOTIFICATION_HOST")
+userClient = ClientSocket(notification_host, 56235)
 print("client user initiated")
 
+time.sleep(10)
 userClient.custom_send("User_connect")
 time.sleep(1)
 while True:

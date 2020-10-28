@@ -1,6 +1,5 @@
 FROM python:3.7-buster
 
-COPY check.py /code
-COPY functions.py /code
+RUN mkdir -p /code/backup
 
-ENTRYPOINT [ "python", "code/check.py" ]
+ENTRYPOINT [ "python", "code/socket_backup.py" ]

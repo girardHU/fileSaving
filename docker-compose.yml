@@ -48,3 +48,16 @@ services:
       - "9983:56235"
     volumes:
       - ./notifications:/code
+
+  backup:
+    build: ./backup_script
+    restart: always
+    environment:
+      NOTIFICATION_HOST: "notifications"
+    volumes:
+      - ./backup_script:/code
+      - ./api/files:/code/public
+      - ./notifications:/code/modules
+    depends_on:
+      - api
+      - notifications

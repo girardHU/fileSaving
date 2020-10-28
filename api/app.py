@@ -49,7 +49,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 ## SOCKET
 from modules.custom_sockets_api import ClientSocket
 clientSocket = ClientSocket(notification_host, 56235)
-print(sys.path)
 
 ## MODELS
 class JsonableModel():

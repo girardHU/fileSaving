@@ -3,9 +3,8 @@ import functions as utils
 import time
 
 
-
-
 def compute_dir_index(path):
+    print("in compute_dir_index")
     files = []
     subdirs = []
     index = {}
@@ -15,16 +14,16 @@ def compute_dir_index(path):
             subdirs.append(os.path.relpath(os.path.join(root, subdir), path))
         for f in filenames:
             files.append(os.path.relpath(os.path.join(root, f), path))
-        
+
     for f in files:
         index[f] = os.path.getmtime(os.path.join(path, f))
-    
+
     content = dict(files=files, subdirs=subdirs, index=index)
     return content
-    
 
-    
+
 def compute_diff(dir_base, dir_cmp):
+    print("in compute_diff")
     data = {}
     data['deleted'] = list(set(dir_cmp['files']) - set(dir_base['files']))
     data['created'] = list(set(dir_base['files']) - set(dir_cmp['files']))
@@ -36,7 +35,9 @@ def compute_diff(dir_base, dir_cmp):
 
     return data
 
+
 def run_check():
+    print("in run_check")
     path = './public'
     path_backup = './backup'
     
@@ -49,6 +50,9 @@ def run_check():
     updated_file = result["updated"]
     deleted_file = result["deleted"]
     deleted_dir = result["deleted_dirs"]
+    print(result)
+    print(content_main)
+    print(content_backup)
 
     utils.copy_to_backup(created_file, updated_file, subdirs)
     utils.remove(deleted_file, deleted_dir)

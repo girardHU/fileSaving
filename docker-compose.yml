@@ -57,6 +57,7 @@ services:
     volumes:
       - ./backup_script:/code
       - ./api/files:/code/public
+      - ./backup:/code/backup
       - ./notifications:/code/modules
     depends_on:
       - api

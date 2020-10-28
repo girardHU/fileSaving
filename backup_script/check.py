@@ -53,7 +53,6 @@ def run_check():
     utils.copy_to_backup(created_file, updated_file, subdirs)
     utils.remove(deleted_file, deleted_dir)
     print("...")
-    time.sleep(10)
 
 
 

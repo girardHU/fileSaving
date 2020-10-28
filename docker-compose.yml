@@ -8,7 +8,7 @@ services:
     image: adminer:4.7.6
     restart: always
     ports:
-      - 9981:8080
+      - "9981:8080"
 
   database:
     image: mysql:latest
@@ -27,13 +27,24 @@ services:
     build: ./api
     restart: always
     ports:
-      - "5000:5000"
+      - "9982:5000"
     volumes:
-      - ./api:/code
+      - ./api:/code/source
+      - ./notifications:/code/source/modules
     environment:
       MYSQL_USER: "myuser"
       MYSQL_PASSWORD: "mypassword"
       MYSQL_DATABASE: "filesaving"
       MYSQL_HOST: "database"
+      NOTIFICATION_HOST: "notifications"
     depends_on:
       - database
+      - notifications
+  
+  notifications:
+    build: ./notifications
+    restart: always
+    ports:
+      - "9983:56235"
+    volumes:
+      - ./notifications:/code

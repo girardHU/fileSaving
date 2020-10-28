@@ -1,6 +1,6 @@
 import json
 import re
-import os
+import sys
 from datetime import datetime, timedelta
 import hashlib, binascii
 from secrets import token_hex
@@ -14,7 +14,7 @@ import os
 from flask import Flask, flash, request, redirect, url_for
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = '/home/itha/Dev/ETNA/RTP-API/files'
+UPLOAD_FOLDER = '/code/source/files'
 # ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv'}
 # ALLOWED_FORMATS = {1080, 720, 480, 360, 240}
 
@@ -38,12 +38,18 @@ mysql_user = os.environ.get('MYSQL_USER')
 mysql_password = os.environ.get('MYSQL_PASSWORD')
 mysql_host = os.environ.get('MYSQL_HOST')
 mysql_database = os.environ.get('MYSQL_DATABASE')
+notification_host = os.environ.get('NOTIFICATION_HOST')
 
 ## APP
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}:3306/{mysql_database}'
 db = SQLAlchemy(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+## SOCKET
+from modules.custom_sockets_api import ClientSocket
+clientSocket = ClientSocket(notification_host, 56235)
+print(sys.path)
 
 ## MODELS
 class JsonableModel():
@@ -346,6 +352,7 @@ def upload_file(user_id):
                             private=1)
             db.session.add(newFile)
             db.session.commit()
+            clientSocket.custom_send("File_create")
             return {'message': 'OK', 'data': newFile.as_dict()}
         else:
             return {'message': 'Bad Request', 'code': 10001, 'data': ['unknown error, check your request and try again later']}, 400
@@ -397,6 +404,7 @@ def update_file(file_id):
                 if name:
                     fileToUpdate.name = secure_filename(name)
                 db.session.commit()
+                clientSocket.custom_send("File_update")
                 return {'message': 'OK', 'data': fileToUpdate.as_dict()}, 200
             else:
                 return {'message': 'Forbidden'}, 403
@@ -410,6 +418,7 @@ def update_file(file_id):
                 os.remove(os.path.join(app.config['UPLOAD_FOLDER'],fileToDelete.path))
                 db.session.delete(fileToDelete)
                 db.session.commit()
+                clientSocket.custom_send("File_delete")
                 return {'message': 'OK'}, 204
             else:
                 return {'message': 'Forbidden'}, 403

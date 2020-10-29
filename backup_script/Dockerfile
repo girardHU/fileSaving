@@ -1,5 +1,5 @@
 FROM python:3.7-buster
 
-RUN mkdir -p /code/backup
+WORKDIR /code
 
-ENTRYPOINT [ "python", "code/socket_backup.py" ]
+ENTRYPOINT [ "python", "socket_backup.py" ]

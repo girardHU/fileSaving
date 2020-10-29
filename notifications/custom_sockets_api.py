@@ -97,13 +97,23 @@ class ClientSocket:
     def __init__(self, addr, port):
         self._sock = None
         self._addr = None
+        self._connected = False
         self.init_connection(addr, port)
 
     def init_connection(self, host, port):
         addr = (host, port)
         print("starting connection to", addr)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect(addr)
+        while not self._connected:
+            try:
+                sock.connect(addr)
+                self._connected = True
+            except ConnectionRefusedError:
+                print("connection refused, attemping again in 3 seconds")
+                time.sleep(3)
+            except KeyboardInterrupt:
+                print("caught KeyboardInterrupt, exiting")
+                exit(0)
         self._addr = addr
         self._sock = sock
         print("connected")

@@ -9,7 +9,6 @@ notification_host = os.environ.get("NOTIFICATION_HOST")
 userClient = ClientSocket(notification_host, 56235)
 print("client user initiated")
 
-time.sleep(10)
 userClient.custom_send("User_connect")
 time.sleep(1)
 while True:

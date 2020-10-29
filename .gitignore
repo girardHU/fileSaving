@@ -2,6 +2,7 @@ __pycache__
 .vscode
 venv
 files
+backup
 client-pseudocode.txt
 client_ping.py
 client_read.py

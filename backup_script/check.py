@@ -40,7 +40,7 @@ def run_check():
     print("in run_check")
     path = './public'
     path_backup = './backup'
-    
+
     content_main = compute_dir_index(path)
     content_backup = compute_dir_index(path_backup)
     subdirs = content_main["subdirs"]
@@ -50,9 +50,6 @@ def run_check():
     updated_file = result["updated"]
     deleted_file = result["deleted"]
     deleted_dir = result["deleted_dirs"]
-    print(result)
-    print(content_main)
-    print(content_backup)
 
     utils.copy_to_backup(created_file, updated_file, subdirs)
     utils.remove(deleted_file, deleted_dir)

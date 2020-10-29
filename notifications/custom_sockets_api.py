@@ -113,7 +113,7 @@ class ClientSocket:
                 time.sleep(3)
             except KeyboardInterrupt:
                 print("caught KeyboardInterrupt, exiting")
-                exit(0)
+                sys.exit(0)
         self._addr = addr
         self._sock = sock
         print("connected")
